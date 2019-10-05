@@ -127,7 +127,7 @@ function addCommand(args, message) {
 		}
 	}
 
-	//javascript acts weird when you shift() within an array? All cases fail after a shift operations
+	//javascript acts weird when you shift() within a loop? All cases fail after a shift operations
 	//if you were wondering why this bit of code is right here. 
 	//Don't worry I hate it too. I can't be bothered though. I messed with it for far too long wondering why my cases kept fucking up
 	for(i = 0; i < argsCounter; i++) {
@@ -473,42 +473,3 @@ client.login(token);
 
 
 const axios = require('axios');
-
-
-
-
-class GivenCommand {
-	constructor(message, args) {
-
-		if(args.length < 3) {
-			message.reply('I need more information to add your command, see !help add');
-			return;
-		}
-		this.name = getName(message);
-		this.type = getType(message);
-		this.lastMessage = getLastMessage();
-		this.pingMessage = getPingMessage();
-		var flags;
-
-	}
-
-
-
-	getName() {
-		name = args[0];
-		args.shift();
-	}
-
-	getType() {
-
-	}
-
-	getLastMessage() {
-
-	}
-
-	getPingMessage() {
-
-	}
-
-}

@@ -471,5 +471,3 @@ client
 
 client.login(token);
 
-
-const axios = require('axios');

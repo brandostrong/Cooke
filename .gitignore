@@ -8,3 +8,5 @@ config.json
 .eslint.json
 pyscripts
 settings.sqlite
+package-lock.json
+package-lock.json

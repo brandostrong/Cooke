@@ -3,7 +3,6 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const { prefix, token, owner } = require('./config.json');
 const path = require('path');
-const sqlite = require('sqlite');
 const shortid = require('shortid');
 var fs = require('fs');
 const commands = [];
@@ -43,7 +42,7 @@ function isProtected(command, message) {
 // /NEW PYTHON ATTEMPS
 
 
-const { PythonShell } = require('python-shell');
+let {PythonShell} = require('python-shell')
 
 
 

@@ -56,68 +56,98 @@ function runString() {
 
 
 
-function replyText(string, type, message) {
-	console.log("reply string is: " + string);
-	if(string == null) { return; }
+// function replyText(string, type, message) {
+// 	console.log("reply string is: " + string);
+// 	if(string == null) { return; }
+// 	var multiline = string.includes("\n");
+
+// 	if (type == "channel" && multiline) {
+// 		message.channel.send("\`\`\`" + string + "\`\`\`");
+// 		return;
+// 	}
+// 	if (type == "channel" && !multiline) {
+// 		message.channel.send(string);
+// 		return;
+// 	}
+// 	if (type == "reply" && multiline) {
+// 		message.reply("\`\`\`" + string + "\`\`\`");
+// 	}
+// 	if (type == "reply" && !multiline) {
+// 		message.reply(string);
+// 	}
+// 	message.reply("err on replyText()");
+// 	console.log("err on reply string \n" + string + "\n type : " + type);
+// }
+
+
+function ping(string, message) {
+	if(string == null) { message.channel.send("NullStringError in reply()"); return; }
+
 	var multiline = string.includes("\n");
 
-	if (type == "channel" && multiline) {
+	if (multiline) {
+		message.reply("\`\`\`" + string + "\`\`\`");
+	} else {
+		message.reply(string);
+	}
+}
+
+function reply(string, message) {
+	if(string == null) { message.channel.send("NullStringError in reply()"); return; }
+
+	var multiline = string.includes("\n");
+
+	if (multiline) {
 		message.channel.send("\`\`\`" + string + "\`\`\`");
 		return;
-	}
-	if (type == "channel" && !multiline) {
+	} else {
 		message.channel.send(string);
 		return;
 	}
-	if (type == "reply" && multiline) {
-		message.reply("\`\`\`" + string + "\`\`\`");
-	}
-	if (type == "reply" && !multiline) {
-		message.reply(string);
-	}
-	message.reply("err on replyText()");
-	console.log("err on reply string \n" + string + "\n type : " + type);
 }
 
 
-function addCommand(args, message) {
-	var name;
-	var type;
-	var lastMessage = false;
-	var pingMessage = false;
-	var flags;
-	console.log("lastMessage is: " + lastMessage);
-	console.log("PingMessage is: " + pingMessage);
 
-	if(args.length < 3) {
-		message.reply('I need more information to add your command, see !help add');
+//command.name has command name
+//command.command has command
+//command.lastMessage
+//command.pingMessage
+//command.args has everything after name
+
+function parseAddorEdit(command) {
+
+	command.args = command.msgArr;
+	command.lastMessage = false;
+	command.pingMessage = false;
+	
+	if(command.args.length < 3) {
+		reply('I need more information to add your command, see !help add', message);
 		return;
 	}
+	command.name = command.msgArr[0]
+	command.msgArr.shift();
+	command = getArgs(command);
+	return command;
+}
 
-	name = args[0];
-	args.shift();
-	//const type = args[1];
-	//args2 = args;
-	//args2.shift();
-	//args2.shift();
-	//needs commenting really fucking bad
+function getArgs(command) {
 	var argsCounter = 0;
-	for(const arg of args) {
+	for(const arg of command.args) {
 		if(arg.startsWith('-')) {
 			argsCounter++;
 			console.log(arg);
 			switch(arg) {
 				case('-py'):
-					type = 'py';
+					command.type = 'py';
 					break;
 				case('-text'):
-					type = 'text';
+					command.type = 'text';
 					break;
 				case('-last'):
-					lastMessage = true;
+					command.lastMessage = true;
 					break;
 				case('-ping'):
-					pingMessage = true;
+					command.pingMessage = true;
 					break;
 				default:
 			}
@@ -125,56 +155,58 @@ function addCommand(args, message) {
 			break;
 		}
 	}
-
 	//javascript acts weird when you shift() within a loop? All cases fail after a shift operations
 	//if you were wondering why this bit of code is right here. 
 	//Don't worry I hate it too. I can't be bothered though. I messed with it for far too long wondering why my cases kept fucking up
 	for(i = 0; i < argsCounter; i++) {
-		args.shift();
+		command.args.shift();
 	}
+	return command;
+}
 
+function addCommand(command, message) {
 
-	console.log(name);
-	if(isProtected(name, message)) {
+	command = parseAddorEdit(command);
+
+	if(isProtected(command.name, message)) {
+		reply("This is a protected command", message);
  		return;
 	}
 
 	const find = db.get('commands')
-		.find({ name: name })
+		.find({ name: command.name })
 		.value();
 	if(find) {
-		message.reply("There is already a command named " + name);
+		message.reply("There is already a command named " + command.name);
 		return;
 	} else {
 		db.get('commands')
-  			.push({ id: shortid.generate(), name: name, type: type, text: args.join(' '), last: lastMessage, ping: pingMessage  })
+  			.push({ id: shortid.generate(), name: command.name, type: command.type, text: command.msgArr.join(' '), last: command.lastMessage, ping: command.pingMessage  })
   			.write();
 	}
 	// commands.push(new Command(name, type, args.join(' ')));
-	message.reply('Created command ' + name + ' of type ' + type + '.');
+	reply('Created command ' + command.name + ' of type ' + command.type + '.', message);
 }
 
-function editCommand(args, message) {
-	const name = args[0];
-	const type = args[1];
-	args.shift();
-	args.shift();
+function editCommand(command, message) {
+
+	let command = parseAddorEdit(command);
 
 	const edit = db.get('commands')
-  		.find({ name: name })
- 		.assign({ type: type, text: args.join(' ') })
+  		.find({ name: command.name })
+ 		.assign({ type: command.type, text: command.args.join(' ') })
  		.write();
  	if(edit.id == undefined) {
- 		message.reply('Could not find command to edit');
+ 		reply('Could not find command to edit', message);
  	}
 	else {
-		if(type == 'py') {
-			fs.writeFile('.\\pyscripts\\' + name + '.py', args.join(' '), function (err) {
+		if(command.type == 'py') {
+			fs.writeFile('.\\pyscripts\\' + command.name + '.py', command.args.join(' '), function (err) {
   				if (err) throw err;
-  				console.log('Edited command file: ' + name + '.py');
+  				console.log('Edited command file: ' + command.name + '.py');
 			});
 		}
- 		message.reply('Successfully edited command');
+ 		reply('Successfully edited command', message);
  	}
  	console.log(edit);
 }
@@ -186,7 +218,7 @@ function showCommand(args, message) {
 		.find({ name: name })
 		.value();
 	if(find) {
-		message.channel.send(`name: ${find.name} type: ${find.type} text: \`\`\`${find.text}\`\`\``);
+		message.channel.send(`name: ${find.name} type: ${find.type} lastMessage: ${find.last} ping: ${find.ping} text: \`\`\`${find.text}\`\`\``);
 	}
 	else {
 		message.reply('Could not find command');
@@ -215,11 +247,10 @@ function removeCommand(args, message) {
   	}
 }
 
-
-function findCommand(command, args, message) {
+function findCommand(command, message) {
 
 	const find = db.get('commands')
-  		.find({ name: command })
+  		.find({ name: command.name })
   		.value();
 
   	console.log(find);
@@ -227,10 +258,9 @@ function findCommand(command, args, message) {
 		runCommand(find, message);
 	}
 	else {
-		message.reply('No command found named: ' + command);
+		reply('No command found named: ' + command.name, message);
 	}
 }
-
 
 function runCommand(command, message) {
 	switch(command.type) {
@@ -262,7 +292,6 @@ function getLastMessageFromID(userID, messageCollection, message) {
 	return messageCollection.filter(m => m.author.id === userID).array()[0].content;
 }
 
-
 function runScript(command, messageArray, message) {
 	//let messageCollection = message.channel.messages;
 	let arr = message.content.split(' ');
@@ -284,7 +313,6 @@ function runScript(command, messageArray, message) {
 	// if(messageArr.length > 1) {
 	// 	messageArr.shift();
 	// }
-	
 	const options = {
 		mode: 'json',
 		pythonPath: '',
@@ -293,45 +321,35 @@ function runScript(command, messageArray, message) {
 		args: arr
 	};
 
-
 	console.log(command);
 	console.log('/pyscripts/' + command.name + '.py');
+
 	//check for file.py if not make one
 	if (fs.existsSync('.\\pyscripts\\' + command.name + '.py')) {
    		PythonShell.run(command.name + '.py', options, function(err, results) {
 			if(err) {
-				replyText(err.message, 'channel', message);
+				reply(err.message, message);
 			}
-		// results is an array consisting of messages collected during execution
-			replyText(results, 'channel', message);
+			// results is an array consisting of messages collected during execution
+			reply(results, message);
 			console.log('Running command from file: ' + command.name);
 		});
 	} else {
 		fs.appendFile('.\\pyscripts\\' + command.name + '.py', command.text, function (err) {
 			if(err) {
-				replyText(err.message, 'channel', message);
+				reply(err.message, message);
 			}
   			console.log('Saved command to file: ' + command.name);
 		});
 
 		PythonShell.run(command.name + '.py', options, function(err, results) {
 			if(err) {
-				replyText(err.message, 'channel', message);
+				reply(err.message, message);
 			}
-			
 		// results is an array consisting of messages collected during execution
-			replyText(results, 'channel', message);
+			reply(results, message);
 		});
 	}
-
-	// axios.post('https://pyfiddle.io/api/', {
-	// 	code: `${command.text}`,
-	// 	commands: `${args}`,
-	// }).then(function(response) {
-	// 	message.reply(response.data.output);
-	// }).catch(function(error) {
-	// 	console.log(error);
-	// });
 }
 
 function runPy(command, message) {
@@ -352,22 +370,19 @@ function runPy(command, message) {
   				lastMessageFromID = getLastMessageFromID(mentionUserID, messages, message);
   				messageArray.push(lastMessageFromID);
   			}
-  			
-  			
   			console.log(messageArray);
 
   			runScript(command, messageArray, message);
-
   			// console.log(lastMessage.content);
   			// console.log(lastMessageFromID);
-
   		})
   		.catch(console.error);
-
 }
 
 
-function addWhitelist(id) {
+function addWhitelist(message) {
+	let id = message.mentions.users.first().id;
+	console.log(message.mentions.users.first().id);
 	db.get('whitelist')
 	.push({ ids: id })
 	.write();
@@ -381,70 +396,35 @@ function checkWhitelist(message) {
 	return find;
 }
 
-function readMessage(message) {
+function parseMessage(message) {
+	if(checkWhitelist(message)) { } else { return; }
+	let command = {};
+	command.msgArr = message.content.split(' ');
+	command.command = command.msgArr[0].replace(`${prefix}`, '');
+	command.name = command.command;
+	command.msgArr.shift();
+	console.log('Recieved command: ' + command.name);
 
-	if(checkWhitelist(message)) {
-	} else {
-		return;
-	}
-
-	const msgArr = message.content.split(' ');
-	let command = msgArr[0];
-	command = command.replace(`${prefix}`, '');
-	console.log('Recieved command: ' + command);
-
-
-	if(command == 'add') {
-		// remove the add command
-		msgArr.shift();
-		addCommand(msgArr, message);
-		return;
-	}
-
-	if(command == 'whitelist') {
-		msgArr.shift();
-		let id = message.mentions.users.first().id;
-		console.log(message.mentions.users.first().id);
-		addWhitelist(id);
-		return;
-	}
-
-	if(command == 'list') {
-		if(commands.length == 0) {
-			message.reply('There are no commands yet');
+	switch(command.command) {
+		case('add'):
+			addCommand(command, message);
 			return;
-		}
-		let reply = '\n';
-		commands.forEach(function commandPrint(item) { reply += item.name + ' : ' + item.type + '\n';});
-		message.reply(reply);
-		return;
+		case('whitelist'):
+			addWhitelist(message);
+			return
+		case('edit'):
+			editCommand(command, message);
+			return;
+		case('remove'):
+			removeCommand(command, message);
+			return;
+		case('show'):
+			showCommand(command, message);
+			return;
+		default:
+			findCommand(command, message);
 	}
-
-	if(command == 'edit') {
-		msgArr.shift();
-		editCommand(msgArr, message);
-		return;
-	}
-
-	if(command == 'remove') {
-		msgArr.shift();
-		removeCommand(msgArr, message);
-		return;
-	}
-	if(command == 'show') {
-		msgArr.shift();
-		showCommand(msgArr, message);
-		return;
-	}
-	if(command == 'runstring') {
-		printReply(message);
-		return;
-	}
-
-	findCommand(command, msgArr, message);
-
 }
-
 
 client
 	.on('error', console.error)
@@ -457,7 +437,7 @@ client
 	.on('reconnecting', () => { console.warn('Reconnecting...'); })
 	.on('message', message => {
 		if(message.content.startsWith(`${prefix}`)) {
-			readMessage(message);
+			parseMessage(message);
 		}
 	}
 

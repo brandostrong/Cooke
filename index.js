@@ -21,11 +21,12 @@ const FileSync = require('lowdb/adapters/FileSync');
 const adapter = new FileSync('db.json');
 const db = low(adapter);
 
-db.defaults({ commands: [], whitelist: [] })
+db.defaults({ commands: [], whitelist: [], test: [] })
 	.write();
 
 
 const protectedCommands = ['add', 'edit', 'delete', 'list', 'remove', 'show', 'help', 'whitelist'];
+
 console.log(protectedCommands);
 
 
@@ -131,11 +132,13 @@ function parseAddorEdit(command) {
 }
 
 function getArgs(command) {
+	command.arguments = [];
 	var argsCounter = 0;
 	for(const arg of command.args) {
 		if(arg.startsWith('-')) {
 			argsCounter++;
 			console.log(arg);
+			command.arguments.push(arg.replace('-', ''));
 			switch(arg) {
 				case('-py'):
 					command.type = 'py';
@@ -180,9 +183,19 @@ function addCommand(command, message) {
 		message.reply("There is already a command named " + command.name);
 		return;
 	} else {
+		//db.get('commands')
+  		//	.push({ id: shortid.generate(), name: command.name, type: command.type, text: command.msgArr.join(' '), last: command.lastMessage, ping: command.pingMessage  })
+		//	.write();
+		command.text = command.args;
+		delete command.msgArr;
+		delete command.args;
+		delete command.command;
+		delete command.lastMessage;
+		delete command.pingMessage;
+		command = Object.assign({id: shortid.generate()}, command);
 		db.get('commands')
-  			.push({ id: shortid.generate(), name: command.name, type: command.type, text: command.msgArr.join(' '), last: command.lastMessage, ping: command.pingMessage  })
-  			.write();
+			.push(command)
+			.write();
 	}
 	// commands.push(new Command(name, type, args.join(' ')));
 	reply('Created command ' + command.name + ' of type ' + command.type + '.', message);
@@ -212,13 +225,12 @@ function editCommand(command, message) {
 }
 
 
-function showCommand(args, message) {
-	const name = args[0];
+function showCommand(command, message) {
 	const find = db.get('commands')
-		.find({ name: name })
+		.find({ name: command.msgArr[0] })
 		.value();
 	if(find) {
-		message.channel.send(`name: ${find.name} type: ${find.type} lastMessage: ${find.last} ping: ${find.ping} text: \`\`\`${find.text}\`\`\``);
+		message.channel.send(`name: ${find.name} type: ${find.type} arguments: { ${find.arguments} } text: \`\`\`${find.text}\`\`\``);
 	}
 	else {
 		message.reply('Could not find command');
@@ -252,7 +264,6 @@ function findCommand(command, message) {
 	const find = db.get('commands')
   		.find({ name: command.name })
   		.value();
-
   	console.log(find);
 	if(find != undefined) {
 		runCommand(find, message);
@@ -388,6 +399,21 @@ function addWhitelist(message) {
 	.write();
 }
 
+function removeWhiteList(message) {
+	let id = message.mentions.users.first().id;
+	console.log(message.mentions.users.first().id);
+	const remove = db.get('whitelist')
+		.remove({ ids: id })
+		.write();
+	if(remove[0]) {
+		reply("@" + id + " has been removed from whitelist", message);
+	} else {
+		reply("Could not find user in whitelist", message);
+	}
+}
+
+
+
 function checkWhitelist(message) {
 	let id = message.author.id;
 	const find = db.get('whitelist')
@@ -412,6 +438,9 @@ function parseMessage(message) {
 		case('whitelist'):
 			addWhitelist(message);
 			return
+		case('rwhitelist'):
+			removeWhiteList(message);
+			return;
 		case('edit'):
 			editCommand(command, message);
 			return;
@@ -439,12 +468,6 @@ client
 		if(message.content.startsWith(`${prefix}`)) {
 			parseMessage(message);
 		}
-	}
-
-	)
-	.on('commandError', (cmd, err) => {
-		if(err instanceof commando.FriendlyError) return;
-		console.error(`Error in command ${cmd.groupID}:${cmd.memberName}`, err);
 	});
 
 

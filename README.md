@@ -37,6 +37,9 @@ Cooke: 6
 Use ```?show commandname``` to see the associated info for a command
 ```
 ?show pyadd
+```
+
+```
 cooke: pyadd -py
 import sys
 x = 0

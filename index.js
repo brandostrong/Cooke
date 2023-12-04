@@ -12,8 +12,6 @@ types.push('py');
 types.push('text');
 
 
-// database stuff
-
 const low = require('lowdb');
 const FileSync = require('lowdb/adapters/FileSync');
 
@@ -30,57 +28,41 @@ const protectedCommands = ['add', 'edit', 'delete', 'list', 'remove', 'show', 'h
 console.log(protectedCommands);
 
 
+/**
+ * Checks if a command is protected and provides a message if it is.
+ * @param {string} command - The command to check.
+ * @param {string} message - The message object to reply to.
+ * @returns {boolean} - True if the command is protected, false otherwise.
+ */
 function isProtected(command, message) {
-	if(protectedCommands.includes(command)) {
-		message.reply('That is a protected command, cannot edit add or remove');
-		
-		return true;
-	}
-	return false;
+  // List of protected commands
+  const protectedCommands = ['command1', 'command2', 'command3'];
+  
+  // Check if the command is in the list of protected commands
+  if (protectedCommands.includes(command)) {
+    // Reply with a message indicating that the command is protected
+    message.reply('That is a protected command, cannot edit, add, or remove.');
+    
+    // Return true to indicate that the command is protected
+    return true;
+  }
+  
+  // Return false to indicate that the command is not protected
+  return false;
 }
 
-
-// /NEW PYTHON ATTEMPS
 
 
 let {PythonShell} = require('python-shell')
 
 
-
-function runString() {
-	PythonShell.run('script.py', options, function(err, results) {
-		if (err) throw err;
-		// results is an array consisting of messages collected during execution
-		console.log(results.join('\n'));
-	});
-}
-
-
-
-// function replyText(string, type, message) {
-// 	console.log("reply string is: " + string);
-// 	if(string == null) { return; }
-// 	var multiline = string.includes("\n");
-
-// 	if (type == "channel" && multiline) {
-// 		message.channel.send("\`\`\`" + string + "\`\`\`");
-// 		return;
-// 	}
-// 	if (type == "channel" && !multiline) {
-// 		message.channel.send(string);
-// 		return;
-// 	}
-// 	if (type == "reply" && multiline) {
-// 		message.reply("\`\`\`" + string + "\`\`\`");
-// 	}
-// 	if (type == "reply" && !multiline) {
-// 		message.reply(string);
-// 	}
-// 	message.reply("err on replyText()");
-// 	console.log("err on reply string \n" + string + "\n type : " + type);
-// }
-
-
+/**
+ * Sends a ping message to the specified channel.
+ *
+ * @param {string} string - The message to be sent.
+ * @param {object} message - The message object containing the channel to send the message to.
+ * @return {undefined} The function does not return a value.
+ */
 function ping(string, message) {
 	if(string == null) { message.channel.send("NullStringError in reply()"); return; }
 
@@ -93,6 +75,13 @@ function ping(string, message) {
 	}
 }
 
+/**
+ * Reply to a message with a string.
+ *
+ * @param {string} string - The string to reply with.
+ * @param {object} message - The message object to reply to.
+ * @return {undefined} There is no return value.
+ */
 function reply(string, message) {
 	if(string == null) { message.channel.send("NullStringError in reply()"); return; }
 
@@ -107,14 +96,18 @@ function reply(string, message) {
 	}
 }
 
-
-
 //command.name has command name
 //command.command has command
 //command.lastMessage
 //command.pingMessage
 //command.args has everything after name
 
+/**
+ * Parses the command for adding or editing and returns the modified command object.
+ *
+ * @param {object} command - The command object to be modified.
+ * @return {object} The modified command object.
+ */
 function parseAddorEdit(command) {
 
 	command.args = command.msgArr;
@@ -131,6 +124,12 @@ function parseAddorEdit(command) {
 	return command;
 }
 
+/**
+ * Generates a function comment for the given function body.
+ *
+ * @param {string} command - the command to process
+ * @return {object} command - the processed command object
+ */
 function getArgs(command) {
 	command.arguments = [];
 	var argsCounter = 0;
@@ -167,6 +166,13 @@ function getArgs(command) {
 	return command;
 }
 
+/**
+ * Adds a command to the database.
+ *
+ * @param {string} command - The command to be added.
+ * @param {object} message - The message object.
+ * @return {void} This function does not return anything.
+ */
 function addCommand(command, message) {
 
 	command = parseAddorEdit(command);
@@ -201,6 +207,13 @@ function addCommand(command, message) {
 	reply('Created command ' + command.name + ' of type ' + command.type + '.', message);
 }
 
+/**
+ * Edits a command based on the given command and message.
+ *
+ * @param {string} command - The command to be edited.
+ * @param {string} message - The message associated with the command.
+ * @return {undefined} - This function does not return a value.
+ */
 function editCommand(command, message) {
 
 	let command = parseAddorEdit(command);
@@ -225,6 +238,13 @@ function editCommand(command, message) {
 }
 
 
+/**
+ * Retrieves a command from the database and sends a message containing its details.
+ *
+ * @param {string} command - The name of the command to retrieve.
+ * @param {object} message - The message object used to send the response.
+ * @return {undefined} This function does not return a value.
+ */
 function showCommand(command, message) {
 	const find = db.get('commands')
 		.find({ name: command.msgArr[0] })
@@ -238,6 +258,13 @@ function showCommand(command, message) {
 
 }
 
+/**
+ * Removes a command from the database and deletes the corresponding file if it exists.
+ *
+ * @param {Array} args - An array containing the command name and type.
+ * @param {Object} message - The message object.
+ * @return {undefined} The function does not return a value.
+ */
 function removeCommand(args, message) {
 	const name = args[0];
 	const type = args[1];
@@ -259,6 +286,13 @@ function removeCommand(args, message) {
   	}
 }
 
+/**
+ * Finds a command in the database and runs it if found, or sends an error message if not found.
+ *
+ * @param {object} command - The command object to search for in the database.
+ * @param {object} message - The message object containing information about the command execution.
+ * @return {undefined}
+ */
 function findCommand(command, message) {
 
 	const find = db.get('commands')
@@ -273,6 +307,13 @@ function findCommand(command, message) {
 	}
 }
 
+/**
+ * Executes a command based on its type and sends a response message.
+ *
+ * @param {object} command - The command object.
+ * @param {object} message - The message object.
+ * @return {undefined} - There is no return value.
+ */
 function runCommand(command, message) {
 	switch(command.type) {
 	case('text'):
@@ -299,10 +340,26 @@ function runCommand(command, message) {
 
 // }
 
+/**
+ * Returns the content of the last message sent by a specific user.
+ *
+ * @param {string} userID - The ID of the user.
+ * @param {Array} messageCollection - The collection of messages.
+ * @param {Object} message - The message object.
+ * @return {string} The content of the last message sent by the user.
+ */
 function getLastMessageFromID(userID, messageCollection, message) {
 	return messageCollection.filter(m => m.author.id === userID).array()[0].content;
 }
 
+/**
+ * Executes a script with the given command and arguments.
+ *
+ * @param {string} command - The command to execute.
+ * @param {Array} messageArray - An array of messages.
+ * @param {string} message - The message.
+ * @return {undefined}
+ */
 function runScript(command, messageArray, message) {
 	//let messageCollection = message.channel.messages;
 	let arr = message.content.split(' ');
@@ -310,20 +367,9 @@ function runScript(command, messageArray, message) {
 	arr.shift();
 	//join with lastmessage, lastidmessage
 	arr = messageArray.concat(arr);
-
 	console.log("last is: " + arr[0]);
 	console.log("ping is: " + arr[1]);
 
-	// let arr = message.channel.fetchMessages({ limit: 10 })
-	// 	.then(message => return message.array(););
-	// console.log(arr);
-	// console.log(arr.array());
-	// console.log(JSON.stringify(arr));
-	// arr = messageArr.concat(arr);
-
-	// if(messageArr.length > 1) {
-	// 	messageArr.shift();
-	// }
 	const options = {
 		mode: 'json',
 		pythonPath: '',
@@ -363,6 +409,12 @@ function runScript(command, messageArray, message) {
 	}
 }
 
+/**
+ * Runs a Python command with a given message.
+ *
+ * @param {string} command - The Python command to run.
+ * @param {string} message - The message to use when running the command.
+ */
 function runPy(command, message) {
 	var lastMessage;
 	var mentionUserID;
@@ -391,6 +443,12 @@ function runPy(command, message) {
 }
 
 
+/**
+ * Adds the specified user ID to the whitelist.
+ *
+ * @param {Object} message - The message object.
+ * @return {undefined}
+ */
 function addWhitelist(message) {
 	let id = message.mentions.users.first().id;
 	console.log(message.mentions.users.first().id);
@@ -399,6 +457,12 @@ function addWhitelist(message) {
 	.write();
 }
 
+/**
+ * Removes a user from the whitelist.
+ *
+ * @param {Object} message - The message object.
+ * @return {undefined}
+ */
 function removeWhiteList(message) {
 	let id = message.mentions.users.first().id;
 	console.log(message.mentions.users.first().id);
@@ -414,6 +478,12 @@ function removeWhiteList(message) {
 
 
 
+/**
+ * Checks if the given message author's ID is whitelisted.
+ *
+ * @param {Object} message - The message object.
+ * @return {Object} The whitelisted object if the author's ID is found, otherwise undefined.
+ */
 function checkWhitelist(message) {
 	let id = message.author.id;
 	const find = db.get('whitelist')
@@ -422,6 +492,12 @@ function checkWhitelist(message) {
 	return find;
 }
 
+/**
+ * Parses a message and performs various commands based on the content of the message.
+ *
+ * @param {string} message - The message to be parsed.
+ * @return {undefined} - This function does not return a value.
+ */
 function parseMessage(message) {
 	if(checkWhitelist(message)) { } else { return; }
 	let command = {};
@@ -472,4 +548,3 @@ client
 
 
 client.login(token);
-

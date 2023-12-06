@@ -73,3 +73,29 @@ If no users are contained within the whitelist, bot will revert to default white
 
 # Protecting Commands
 The ability to protect a command is vital to bot security, and while cannot be done within discord, feel free to edit the isProtected function to suit your needs
+
+# An Advanced Command
+A command to uwu-fy the last message said
+```
+?add uwu -py -last 
+import re
+import sys
+string = sys.argv[1]
+string = re.sub(r'(?:r|l)', 'w', string)
+string = re.sub(r'(?:R|L)', 'W', string)
+string = re.sub(r'n([aeiou])', 'ny\1', string)
+string = re.sub(r'N([aeiou])', 'Ny\1', string)
+string = re.sub(r'N([AEIOU])', 'Ny\1', string)
+string = re.sub(r'ove', 'uv', string)
+print(string)
+```
+
+User: 
+```
+Return the string obtained by replacing the leftmost non-overlapping occurrences of pattern in string by the replacement repl. If the pattern isn’t found, string is returned unchanged. 
+?uwu
+```
+Cooke:
+```
+Wetuwn the stwing obtainyed by wepwacing the weftmost nyon-uvwwapping occuwwences of pattewn in stwing by the wepwacement wepw. If the pattewn isn�t found, stwing is wetuwnyed unchanged.
+```

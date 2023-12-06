@@ -6,8 +6,8 @@ Features include adding, removing, and listing commands, and has a fully functio
 
 Not up to date, and unmaintained for now, DM for more info.
 
-## Usage
-# Adding commands within Discord
+# Usage
+## Adding commands within Discord
 ```
 ?add commandname -language -type text
 ```
@@ -17,7 +17,7 @@ Possible values for type are -last, -ping, -text
 * ```-ping``` will properly ping a mentioned user in command arguments, last, or if not mentioned, the most recent.
 * ```-text``` will treat command text as plaintext and simply repeat
 
-# Multi Line Command Example:
+## Multi Line Command Example:
 ``` python
 ?add pyadd -py 
 import sys
@@ -32,7 +32,7 @@ This incorporates the -py flag to enable python code, shows that the bot can par
 Cooke: 6
 ```
 
-# Showing Commands
+## Showing Commands
 
 Use ```?show commandname``` to see the associated info for a command
 ```
@@ -48,7 +48,7 @@ for i in sys.argv[2:]:
 print(x)
 ```
 
-# Editing Commands
+## Editing Commands
 Editing Commands works exactly like adding, following the same conventions, but with the ```?edit``` command. Edits are saved and ```?undo``` will be implemented in the future
 
 ```
@@ -60,10 +60,10 @@ for i in sys.argv[2:]:
 print("the answer to the add command is: " + str(x))
 ```
 
-# Removing Commands
+## Removing Commands
 Removing commands can be done with ```?remove commandname```
 
-# Whitelisting 
+## Whitelisting 
 
 Adding users to a whitelist will enable whitelisting, automatically excluding users not in the whitelist
 Adding can be done with ```?whitelist userid```
@@ -71,10 +71,10 @@ Removing can be done with ```?rwhitelist userid```
 
 If no users are contained within the whitelist, bot will revert to default whitelist-free usage
 
-# Protecting Commands
+## Protecting Commands
 The ability to protect a command is vital to bot security, and while cannot be done within discord, feel free to edit the isProtected function to suit your needs
 
-# An Advanced Command
+## An Advanced Command
 A command to uwu-fy the last message said
 ```
 ?add uwu -py -last 
